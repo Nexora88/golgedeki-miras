@@ -1,0 +1,1 @@
+import{DialogueSystem}from'./DialogueSystem';import{MemorySystem}from'./MemorySystem';import{EndingSystem}from'./EndingSystem';export class StoryManager{readonly dialogue=new DialogueSystem();readonly memories=new MemorySystem();readonly endings=new EndingSystem();chapter=1;record(choice:string){this.memories.remember(choice)}advance(){this.chapter++}}
