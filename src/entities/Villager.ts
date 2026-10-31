@@ -1,0 +1,1 @@
+import*as THREE from'three';export class Villager extends THREE.Group{task:'idle'|'work'|'gather'='idle';constructor(){super();const mesh=new THREE.Mesh(new THREE.CapsuleGeometry(.16,.4,2,4),new THREE.MeshStandardMaterial({color:0xc8a36c}));mesh.position.y=.35;this.add(mesh)}assign(task:Villager['task']){this.task=task}}
