@@ -1,0 +1,1 @@
+import*as THREE from'three';export class Building extends THREE.Group{health=500;constructor(readonly kind:string){super();const mesh=new THREE.Mesh(new THREE.BoxGeometry(2,1.5,2),new THREE.MeshStandardMaterial({color:0x8b7658}));mesh.position.y=.75;mesh.castShadow=true;this.add(mesh)}repair(amount:number){this.health=Math.min(500,this.health+Math.max(0,amount))}}
