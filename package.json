@@ -7,8 +7,8 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "vitest run tests/*.test.ts",
+    "test:watch": "vitest tests/*.test.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -19,6 +19,7 @@
     "@playwright/test": "^1.55.0",
     "@types/three": "^0.180.0",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "@types/node": "^22.15.30"
   }
 }
