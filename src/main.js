@@ -195,4 +195,5 @@ requestAnimationFrame(animate);
 function resize(){renderer.setSize(window.innerWidth,window.innerHeight);renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));updateCamera();}
 window.addEventListener('resize',resize);
 renderStats();
-$('start-game').addEventListener('click',()=>{$('main-menu').classList.add('hidden');$('interface').classList.remove('hidden');toast('Krallığın hazır. İnşaata başlayabilirsin.');});\nsetTimeout(()=>{$('loading-screen').style.opacity='0';setTimeout(()=>$('loading-screen').remove(),550);$('main-menu').classList.remove('hidden');},1150);
+$('start-game').addEventListener('click',()=>{$('main-menu').classList.add('hidden');$('interface').classList.remove('hidden');toast('Krallığın hazır. İnşaata başlayabilirsin.');});
+setTimeout(()=>{$('loading-screen').style.opacity='0';setTimeout(()=>$('loading-screen').remove(),550);$('main-menu').classList.remove('hidden');},1150);
