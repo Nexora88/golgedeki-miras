@@ -58,3 +58,25 @@ Vercel uses the Vite build and publishes the dist directory. Run npm run build b
 ## License
 
 MIT. Third-party assets added later must retain their own licenses.
+
+## Runtime flow
+
+```mermaid
+flowchart TD
+    A[Game Bootstrap] --> B[Scene Manager]
+    B --> C[World and Terrain]
+    C --> D[Game Loop]
+    D --> E[Economy System]
+    D --> F[Army and Combat]
+    D --> G[Building System]
+    D --> H[Story and Quest]
+    D --> I[Campaign and Spy]
+    E --> J[Game State]
+    F --> J
+    G --> J
+    H --> J
+    I --> J
+    J --> K[Save Manager]
+    J --> L[Game UI]
+    K --> M[Browser Storage]
+```
