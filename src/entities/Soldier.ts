@@ -1,0 +1,1 @@
+import*as THREE from'three';export class Soldier extends THREE.Group{health=100;experience=0;constructor(readonly unitType='militia'){super();const body=new THREE.Mesh(new THREE.CapsuleGeometry(.22,.55,3,5),new THREE.MeshStandardMaterial({color:0x8d3930}));body.position.y=.48;body.castShadow=true;this.add(body)}gainExperience(value:number){this.experience+=Math.max(0,value)}}
