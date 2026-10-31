@@ -1,0 +1,1 @@
+export const REGIONS=[{id:'north',name:'Kuzey Kalesi',level:1},{id:'east',name:'Doğu Ormanları',level:1},{id:'south',name:'Güney Geçidi',level:2},{id:'west',name:'Batı Yaylası',level:2},{id:'capital',name:'Eski Başkent',level:3}]as const;
