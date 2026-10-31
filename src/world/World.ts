@@ -1,0 +1,1 @@
+import*as THREE from'three';import{Terrain}from'./Terrain';import{Environment}from'./Environment';export class World extends THREE.Group{readonly terrain=new Terrain();readonly environment=new Environment();constructor(){super();this.add(this.terrain,this.environment)}}
