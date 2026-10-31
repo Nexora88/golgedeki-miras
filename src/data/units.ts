@@ -1,0 +1,1 @@
+import type{UnitType}from'../systems/ArmySystem';export const UNITS:Record<UnitType,{name:string;power:number;cost:number}>={militia:{name:'Milis',power:10,cost:25},archer:{name:'Okçu',power:14,cost:35},spearman:{name:'Mızraklı',power:16,cost:40},cavalry:{name:'Süvari',power:28,cost:90}};
