@@ -1,0 +1,1 @@
+import*as THREE from'three';export class Terrain extends THREE.Group{constructor(size=48){super();const m=new THREE.Mesh(new THREE.PlaneGeometry(size,size,24,24),new THREE.MeshStandardMaterial({color:0x647b57,roughness:1}));m.rotation.x=-Math.PI/2;m.receiveShadow=true;this.add(m);const grid=new THREE.GridHelper(size,24,0x40563d,0x52694a);grid.position.y=.015;this.add(grid)}}
