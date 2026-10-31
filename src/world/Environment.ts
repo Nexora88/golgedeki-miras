@@ -1,0 +1,1 @@
+import*as THREE from'three';export class Environment extends THREE.Group{constructor(){super();const sun=new THREE.DirectionalLight(0xffedc4,2.1);sun.position.set(12,20,8);sun.castShadow=true;this.add(sun,new THREE.HemisphereLight(0xdde8ff,0x526044,1.2))}}
