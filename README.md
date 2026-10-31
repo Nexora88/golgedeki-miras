@@ -20,7 +20,7 @@ The TypeScript entrypoint (src/main.ts) starts the existing Three.js presentatio
 - **Entities:** soldier, commander, enemy, villager and building primitives
 - **Story:** dialogue history, player-choice memory and ending evaluation
 - **Data/UI:** typed balance catalogs and UI module directories ready for dedicated panels
-- **Persistence:** local browser save (localStorage) with basic payload/version validation
+- **Persistence:** IndexedDB save slots with a localStorage fallback and basic payload/version validation
 
 The domain game instance is exposed as window.__SHADOW_LEGACY__.game for development inspection. Call game.advanceDay() to run the typed economy, loyalty and quest simulation; call game.save() to persist the state.
 
