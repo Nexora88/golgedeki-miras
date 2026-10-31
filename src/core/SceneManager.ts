@@ -1,0 +1,1 @@
+import*as THREE from'three';export class SceneManager{readonly scene=new THREE.Scene();constructor(){this.scene.background=new THREE.Color(0x8da18b);this.scene.fog=new THREE.Fog(0x8da18b,34,78)}add(o:THREE.Object3D){this.scene.add(o)}remove(o:THREE.Object3D){this.scene.remove(o)}}
