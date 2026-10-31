@@ -1,0 +1,1 @@
+import type{KingdomState}from'../core/types';export class LoyaltySystem{recalculate(s:KingdomState){s.loyalty.people=Math.max(0,Math.min(100,Math.round((s.happiness+s.prestige)/2)));s.loyalty.nobles=Math.max(0,Math.min(100,s.loyalty.nobles+(s.prestige>20?1:-1)));s.loyalty.commanders=Math.max(0,Math.min(100,s.loyalty.commanders+(s.army>5?1:-1)))}}
