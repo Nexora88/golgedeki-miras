@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#101714" />
+    <meta name="description" content="Gölgedeki Miras — kendi krallığını kur, halkını yönet ve sınırlarını koru." />
+    <title>Gölgedeki Miras</title>
+  </head>
+  <body>
+    <div id="app">
+      <div id="loading-screen">
+        <div class="loading-mark">GM</div>
+        <div class="loading-title">GÖLGEDEKİ MİRAS</div>
+        <div class="loading-subtitle">Krallık hazırlanıyor...</div>
+        <div class="loading-track"><span></span></div>
+      </div>
+      <canvas id="world"></canvas>
+      <div id="interface" class="hidden">
+        <header class="topbar">
+          <div class="brand"><span class="brand-mark">GM</span><span><b>GÖLGEDEKİ MİRAS</b><small>KUZEY KRALLIĞI</small></span></div>
+          <div class="resources">
+            <div class="resource"><span>✦</span><b id="gold">240</b><small>ALTIN</small></div>
+            <div class="resource"><span>▰</span><b id="wood">180</b><small>ODUN</small></div>
+            <div class="resource"><span>◆</span><b id="stone">140</b><small>TAŞ</small></div>
+            <div class="resource"><span>⚒</span><b id="food">120</b><small>YİYECEK</small></div>
+          </div>
+          <div class="day-box"><small>KRALLIK TAKVİMİ</small><b id="day">1. GÜN</b><button id="next-day" class="gold-button">GÜNÜ İLERLET →</button></div>
+        </header>
+        <aside class="left-panel">
+          <div class="panel-heading"><span>✥</span> KRALLIK DURUMU</div>
+          <div class="stat-row"><span>Halkın mutluluğu</span><b id="happiness">78%</b></div>
+          <div class="meter"><i id="happiness-meter" style="width:78%"></i></div>
+          <div class="stat-row"><span>Nüfus</span><b id="population">24 / 60</b></div>
+          <div class="stat-row"><span>Askerî güç</span><b id="army">8</b></div>
+          <div class="panel-divider"></div>
+          <div class="panel-heading">YERLEŞİM</div>
+          <button class="build-option" data-build="farm"><span class="build-icon">♧</span><span><b>Çiftlik</b><small>+ yiyecek üretimi</small></span><em>40 ✦</em></button>
+          <button class="build-option" data-build="lumber"><span class="build-icon">♣</span><span><b>Oduncu Kampı</b><small>+ odun üretimi</small></span><em>35 ✦</em></button>
+          <button class="build-option" data-build="quarry"><span class="build-icon">◆</span><span><b>Taş Ocağı</b><small>+ taş üretimi</small></span><em>45 ✦</em></button>
+          <button class="build-option" data-build="market"><span class="build-icon">⌂</span><span><b>Pazar Yeri</b><small>+ altın üretimi</small></span><em>60 ✦</em></button>
+          <div class="panel-divider"></div>
+          <div class="panel-heading">ORDU</div>
+          <button id="train-soldier" class="action-option"><span>⚔</span><b>Milis Eğit</b><small>25 altın · 10 yiyecek</small></button>
+          <p class="hint">Bir yapı seç, ardından arazide boş bir noktaya dokun.</p>
+        </aside>
+        <div class="right-tools">
+          <button id="zoom-in" aria-label="Yakınlaştır">＋</button>
+          <button id="zoom-out" aria-label="Uzaklaştır">－</button>
+          <button id="reset-camera" aria-label="Kamerayı sıfırla">⌖</button>
+        </div>
+        <div class="bottom-hint" id="bottom-hint">Kamerayı sürükleyerek krallığını keşfet</div>
+        <section class="selection-card hidden" id="selection-card">
+          <button class="close-card" id="close-selection">×</button>
+          <small>SEÇİLİ YAPI</small><h2 id="selection-name">Kale</h2><p id="selection-description">Krallığının kalbi.</p>
+          <div class="selection-meta" id="selection-meta">Merkez bölge</div>
+        </section>
+        <div class="toast" id="toast"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
