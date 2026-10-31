@@ -1,0 +1,1 @@
+export class MemorySystem{private choices:string[]=[];remember(choice:string){this.choices.push(choice)}has(choice:string){return this.choices.includes(choice)}get history(){return[...this.choices]}}
