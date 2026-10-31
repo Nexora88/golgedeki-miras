@@ -1,0 +1,3 @@
+export interface Resources{gold:number;wood:number;stone:number;food:number;iron:number}
+export interface KingdomState{day:number;resources:Resources;population:number;capacity:number;happiness:number;army:number;buildings:Record<string,number>;regions:string[];loyalty:{people:number;nobles:number;commanders:number};prestige:number;quests:string[];completedQuests:string[]}
+export const createInitialState=():KingdomState=>({day:1,resources:{gold:240,wood:180,stone:140,food:120,iron:40},population:24,capacity:60,happiness:78,army:8,buildings:{farm:0,lumber:0,quarry:0,market:0,barracks:0},regions:['Kuzey Kalesi'],loyalty:{people:70,nobles:55,commanders:65},prestige:10,quests:['first-settlement'],completedQuests:[]});
