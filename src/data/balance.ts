@@ -1,0 +1,1 @@
+export const BALANCE={startingGold:240,startingWood:180,startingStone:140,startingFood:120,foodPerPopulation:0.125,saveVersion:1,simulationHz:10}as const;
