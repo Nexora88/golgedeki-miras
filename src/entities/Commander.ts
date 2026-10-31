@@ -1,0 +1,1 @@
+import{Soldier}from'./Soldier';export class Commander extends Soldier{morale=75;constructor(){super('commander')}rally(){this.morale=Math.min(100,this.morale+10);return this.morale}}
