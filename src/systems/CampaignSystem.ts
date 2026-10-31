@@ -1,0 +1,1 @@
+import type{KingdomState}from'../core/types';import{RegionManager}from'../world/RegionManager';export class CampaignSystem{readonly map=new RegionManager();conquer(s:KingdomState,id:string,required:number){const r=this.map.get(id);if(!r||!r.unlocked||r.owner==='player'||s.army<required)return false;r.owner='player';s.regions.push(r.name);s.prestige+=12;return true}}
