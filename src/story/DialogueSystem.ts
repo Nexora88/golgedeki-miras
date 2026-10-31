@@ -1,0 +1,1 @@
+export interface DialogueLine{speaker:string;text:string;choices?:string[]}export class DialogueSystem{private lines:DialogueLine[]=[];add(line:DialogueLine){this.lines.push(line)}get history(){return[...this.lines]}clear(){this.lines=[]}}
