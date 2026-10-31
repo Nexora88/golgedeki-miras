@@ -1,0 +1,1 @@
+import type{KingdomState}from'../core/types';export class SpySystem{scout(s:KingdomState,region:string){if(s.resources.gold<15)return null;s.resources.gold-=15;const roll=(s.day*17+region.length*13)%100;return{region,strength:roll<35?'weak':roll<75?'moderate':'strong',reward:10+roll%20}}}
