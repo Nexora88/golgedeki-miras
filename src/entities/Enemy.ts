@@ -1,0 +1,1 @@
+import{Soldier}from'./Soldier';export class Enemy extends Soldier{readonly faction='Shadow Host';constructor(){super('enemy')}}
