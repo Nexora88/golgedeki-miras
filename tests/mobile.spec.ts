@@ -1,0 +1,1 @@
+import{test,expect}from'@playwright/test';test('renders the game shell at mobile size',async({page})=>{await page.setViewportSize({width:390,height:844});await page.goto('/');await expect(page.locator('#world')).toBeVisible();await expect(page.locator('#app')).toBeVisible()});
