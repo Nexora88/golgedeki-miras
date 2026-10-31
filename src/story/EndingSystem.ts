@@ -1,0 +1,1 @@
+import type{KingdomState}from'../core/types';export type Ending='broken-crown'|'true-legacy'|'unfinished';export class EndingSystem{resolve(s:KingdomState):Ending{if(s.loyalty.commanders<20||s.loyalty.nobles<15)return'broken-crown';if(s.prestige>=60&&s.regions.length>=3&&s.loyalty.people>=55)return'true-legacy';return'unfinished'}}
