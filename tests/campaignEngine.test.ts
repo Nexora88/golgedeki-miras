@@ -34,6 +34,7 @@ describe('campaign economy and persistence', () => {
     expect(exploreRegion(state, 'iron-highlands')).toContain('keşfedildi');
     expect(exploreRegion(state, 'mist-coast')).toContain('keşfedildi');
     expect(state.regions).toHaveLength(4);
+    state.gold = 1000;
     for (const id of ['whispering-forest','iron-highlands','mist-coast'] as const) {
       for (let i=0;i<3;i++) improveDiplomacy(state,id);
     }
