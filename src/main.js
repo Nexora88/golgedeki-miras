@@ -1,13 +1,24 @@
 import * as THREE from 'three';
 import './style.css';
 import { StoryOverlay } from './story/StoryOverlay';
+import { AssetCatalog } from './assets/AssetCatalog';
+import { gameAssetManifest } from './assets/assetManifest';
+import { CampaignPanel } from './game/CampaignPanel';
+import { normalizeCampaign, advanceCampaignDay, placeCampaignBuilding, recruitCampaignSoldier, exploreRegion, resolveRegionalChallenge, improveDiplomacy, claimQuest, type RegionId } from './game/CampaignEngine';
 
 const canvas = document.querySelector('#world');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x8da18b);
 scene.fog = new THREE.Fog(0x8da18b, 34, 78);
 
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'low-power' });
+const renderer = (() => {
+  try { return new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'low-power' }); }
+  catch (error) {
+    const screen = document.querySelector('#loading-screen');
+    if (screen) { screen.replaceChildren(); const title=document.createElement('h1'); title.textContent='OYUN BAŞLATILAMADI'; const detail=document.createElement('p'); detail.textContent='Tarayıcıda WebGL desteği açılamadı. Güncel bir tarayıcı ve donanım hızlandırmasıyla yeniden deneyebilirsin.'; screen.append(title,detail); screen.style.opacity='1'; }
+    throw error;
+  }
+})();
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
@@ -47,6 +58,7 @@ const ground = new THREE.Mesh(new THREE.PlaneGeometry(110, 110), materials.grass
 ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
 
 const world = new THREE.Group(); scene.add(world);
+const assetCatalog = new AssetCatalog(world, { baseUrl: import.meta.env.BASE_URL + 'assets/generated' });
 const pickables = [];
 const buildings = [];
 const treeAnimations = [];
@@ -150,8 +162,16 @@ function createSoldier(x,z) {
   return g;
 }
 const soldiers=[];
+for(const saved of state.buildings){
+  if(saved.kind==='farm')createFarm(saved.x,saved.z);
+  if(saved.kind==='lumber')createLumber(saved.x,saved.z);
+  if(saved.kind==='quarry')createQuarry(saved.x,saved.z);
+  if(saved.kind==='market')createMarket(saved.x,saved.z);
+  state.buildingCounts[saved.kind]++;
+}
 for(let i=0;i<4;i++)createSoldier(-2+i*1.3,7.2);
 for(let i=0;i<4;i++)createSoldier(3+i*1.1,-7.2);
+for(let i=0;i<Math.max(0,state.army-8);i++)createSoldier(-4+(i%5)*1.5,10+Math.floor(i/5)*1.4);
 
 // Decorative terrain: fixed low-poly props, deliberately limited for mobile performance.
 for(let i=0;i<30;i++){const x=(i%6)*3.1-22;const z=Math.floor(i/6)*4.2-12;if(Math.abs(x)>7||Math.abs(z)>9)tree(x,z,.72+(i%3)*.12);}
@@ -164,7 +184,10 @@ const grid=new THREE.GridHelper(38,19,0xb79b62,0x65745c);grid.position.y=.035;gr
 const raycaster=new THREE.Raycaster();const pointer=new THREE.Vector2();
 const groundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);const hitPoint=new THREE.Vector3();
 let selectedBuild=null;let selectedObject=null;let dragging=false;let moved=false;let lastX=0,lastY=0;let pointerStartX=0,pointerStartY=0;
-const state={gold:240,wood:180,stone:140,food:120,day:1,population:24,capacity:60,army:8,happiness:78,buildings:{farm:0,lumber:0,quarry:0,market:0}};
+const activeSlot = Math.max(1,Math.min(3,Number(localStorage.getItem('gm.active-slot')||1)));
+const state = normalizeCampaign(localStorage.getItem('gm.campaign.slot-'+activeSlot));
+state.buildingCounts = {farm:0,lumber:0,quarry:0,market:0};
+function persistGame(){ try { localStorage.setItem('gm.campaign.slot-'+activeSlot,JSON.stringify(state)); } catch { toast('Kayıt alanı kullanılamıyor.'); } }
 const costs={farm:{gold:40,wood:25},lumber:{gold:35,wood:20},quarry:{gold:45,wood:15},market:{gold:60,wood:30}};
 const labels={farm:'Çiftlik',lumber:'Oduncu Kampı',quarry:'Taş Ocağı',market:'Pazar Yeri'};
 const descriptions={farm:'Köylüler burada yiyecek üretir.',lumber:'Oduncular krallığa kereste sağlar.',quarry:'Taş ustaları yapı malzemesi çıkarır.',market:'Tüccarlar krallığa altın kazandırır.'};
@@ -182,12 +205,11 @@ function placeBuilding(point){
   const x=Math.round(point.x/2)*2,z=Math.round(point.z/2)*2;
   if(Math.abs(x)<7&&Math.abs(z)<7){toast('Kale çevresinde inşaat yapılamaz.');return;}
   if(Math.abs(x)>19||Math.abs(z)>19){toast('Krallık sınırlarının dışına çıkamazsın.');return;}
-  const cost=costs[selectedBuild];if(state.gold<cost.gold||state.wood<cost.wood){toast('Yeterli kaynağın yok.');return;}
   const occupied=buildings.some(b=>Math.hypot(b.group.position.x-x,b.group.position.z-z)<3.2);
   if(occupied){toast('Bu alan dolu. Başka bir yer seç.');return;}
-  state.gold-=cost.gold;state.wood-=cost.wood;
+  const error=placeCampaignBuilding(state,selectedBuild,x,z);if(error){toast(error);return;}
   if(selectedBuild==='farm')createFarm(x,z);if(selectedBuild==='lumber')createLumber(x,z);if(selectedBuild==='quarry')createQuarry(x,z);if(selectedBuild==='market')createMarket(x,z);
-  state.buildings[selectedBuild]++;renderStats();toast(labels[selectedBuild]+' inşa edildi!');clearBuild();
+  state.buildingCounts[selectedBuild]++;renderStats();persistGame();toast(labels[selectedBuild]+' inşa edildi!');clearBuild();
 }
 function pointerWorld(event){const rect=canvas.getBoundingClientRect();pointer.x=((event.clientX-rect.left)/rect.width)*2-1;pointer.y=-((event.clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(pointer,camera);}
 canvas.addEventListener('pointerdown',e=>{dragging=true;moved=false;lastX=e.clientX;lastY=e.clientY;pointerStartX=e.clientX;pointerStartY=e.clientY;canvas.setPointerCapture(e.pointerId);});
@@ -197,8 +219,8 @@ canvas.addEventListener('contextmenu',e=>e.preventDefault());
 canvas.addEventListener('wheel',e=>{cameraRadius=THREE.MathUtils.clamp(cameraRadius+e.deltaY*.018,18,48);updateCamera();},{passive:true});
 canvas.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 document.querySelectorAll('.build-option').forEach(button=>button.addEventListener('click',()=>{const type=button.dataset.build;if(selectedBuild===type){clearBuild();toast('İnşaat iptal edildi.');return;}clearBuild();selectedBuild=type;button.classList.add('active');grid.visible=true;$('selection-card').classList.add('hidden');$('bottom-hint').textContent=labels[type]+' için boş bir araziye dokun';toast(labels[type]+' seçildi. Yerleştirmek için araziye dokun.');}));
-$('train-soldier').addEventListener('click',()=>{if(state.gold<25||state.food<10){toast('Asker eğitmek için 25 altın ve 10 yiyecek gerekir.');return;}if(state.population>=state.capacity){toast('Barınak kapasitesi dolu.');return;}state.gold-=25;state.food-=10;state.army++;state.population++;createSoldier(1+(Math.random()-.5)*3,9+(Math.random()-.5)*2);renderStats();toast('Yeni bir milis birliği eğitildi.');});
-$('next-day').addEventListener('click',()=>{state.day++;state.food=Math.max(0,state.food-4);state.food+=state.buildings.farm*18;state.wood+=state.buildings.lumber*16;state.stone+=state.buildings.quarry*14;state.gold+=state.buildings.market*20+8;state.happiness=THREE.MathUtils.clamp(state.happiness+(state.food>15?1:-3),20,100);renderStats();toast('Gün '+state.day+': üretim ve erzak güncellendi.');});
+$('train-soldier').addEventListener('click',()=>{const error=recruitCampaignSoldier(state);if(error){toast(error);return;}createSoldier(1+(Math.random()-.5)*3,9+(Math.random()-.5)*2);renderStats();persistGame();toast('Yeni bir kraliyet muhafızı göreve başladı.');});
+$('next-day').addEventListener('click',()=>{const message=advanceCampaignDay(state);renderStats();persistGame();toast('Gün '+state.day+': '+message);});
 $('zoom-in').addEventListener('click',()=>{cameraRadius=Math.max(18,cameraRadius-3);updateCamera();});
 $('zoom-out').addEventListener('click',()=>{cameraRadius=Math.min(48,cameraRadius+3);updateCamera();});
 $('reset-camera').addEventListener('click',()=>{cameraTarget.set(0,0,0);cameraAngle=Math.PI/4;cameraRadius=31;updateCamera();});
@@ -242,7 +264,19 @@ function animate(time){
 requestAnimationFrame(animate);
 function resize(){renderer.setSize(window.innerWidth,window.innerHeight);renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));updateCamera();}
 window.addEventListener('resize',resize);
+window.addEventListener('pagehide',persistGame);
 renderStats();
+for(const asset of gameAssetManifest){assetCatalog.load(asset).catch(error=>console.warn('Optional game asset could not be loaded:',asset.id,error));}
+const campaignPanel = new CampaignPanel({
+ state:()=>state,
+ explore:(id)=>{const message=exploreRegion(state,id);if(message)toast(message);renderStats();persistGame();},
+ challenge:(id)=>{const result=resolveRegionalChallenge(state,id,Math.floor(Math.random()*6)+1);toast(result.message);renderStats();persistGame();},
+ diplomacy:(id)=>{const message=improveDiplomacy(state,id);if(message)toast(message);renderStats();persistGame();},
+ claim:(id)=>{const message=claimQuest(state,id);if(message)toast(message);renderStats();persistGame();},
+ save:(slot)=>{localStorage.setItem('gm.campaign.slot-'+slot,JSON.stringify(state));toast('Kayıt '+slot+' kaydedildi.');},
+ load:(slot)=>{if(!localStorage.getItem('gm.campaign.slot-'+slot)){toast('Bu kayıt yuvası boş.');return;}localStorage.setItem('gm.active-slot',String(slot));window.location.reload();},
+ chooseEnding:(ending)=>{state.ending=ending;persistGame();toast('Krallığın sonu tarihine kaydedildi.');},
+});
 const storyOverlay = new StoryOverlay();
 $('start-game').addEventListener('click',()=>{
   $('main-menu').classList.add('hidden');
@@ -251,4 +285,4 @@ $('start-game').addEventListener('click',()=>{
   storyOverlay.openPrologue();
   toast('Kuzey Kalesi’nde yeni bir dönem başlıyor.');
 });
-setTimeout(()=>{$('loading-screen').style.opacity='0';setTimeout(()=>$('loading-screen').remove(),550);$('main-menu').classList.remove('hidden');},1150);
+setTimeout(()=>{$('loading-screen').style.opacity='0';setTimeout(()=>$('loading-screen').remove(),550);$('main-menu').classList.remove('hidden');persistGame();},650);
