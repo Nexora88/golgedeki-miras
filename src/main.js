@@ -186,10 +186,42 @@ function createSoldier(x,z) {
   ]);
   const mixer=new THREE.AnimationMixer(g);mixer.clipAction(idle).play();
   pickables.push(g);soldiers.push(g);
-  soldierAnimations.push({group:g,mixer,clips:{idle,walk,guard},baseX:x,baseZ:z,phase:Math.random()*Math.PI*2});
+  soldierAnimations.push({group:g,mixer,clips:{idle,walk,guard},baseX:x,baseZ:z,phase:Math.random()*Math.PI*2,patrol:soldiers.length%2===0,active:'idle'});
   return g;
 }
 const soldiers=[];
+const enemyUnits=[];
+let raidActive=false;
+function setSoldierClip(item,name){
+  if(item.active===name)return;
+  item.mixer.stopAllAction();item.mixer.clipAction(item.clips[name]).play();item.active=name;
+}
+function spawnRaid(){
+  if(raidActive)return;
+  raidActive=true;
+  for(let i=0;i<3;i++){
+    const group=createSoldier(-19-i*.7,-13+i*2.4);
+    group.userData.meta={name:'Sınır Baskıncısı',description:'Krallığın sınırına yaklaşan düşman birliği. Savunma hattına ulaşmadan durdurulmalı.',meta:'Düşman · Yapay zekâ birimi'};
+    group.traverse(object=>{if(object.isMesh&&object.material?.color){object.material=object.material.clone();object.material.color.setHex(0x70413a);}});
+    const animation=soldierAnimations.find(item=>item.group===group);
+    if(animation){animation.patrol=false;setSoldierClip(animation,'walk');}
+    enemyUnits.push({group,targetX:0,targetZ:6.5,speed:.055});
+  }
+  toast('Sınır gözcüleri haber verdi: Krallığa yaklaşan bir birlik var!');
+}
+function finishRaid(){
+  if(!enemyUnits.length)return;
+  const defended=state.army>=enemyUnits.length*2+2;
+  if(defended){state.gold+=30;state.happiness=Math.min(100,state.happiness+2);toast('Savunma başarılı. Halkın güveni arttı. +30 altın.');}
+  else{state.food=Math.max(0,state.food-20);state.happiness=Math.max(10,state.happiness-7);toast('Savunma hattı zorlandı. Erzak kaybı yaşandı; ordunu güçlendir.');}
+  for(const enemy of enemyUnits){
+    world.remove(enemy.group);
+    const index=soldiers.indexOf(enemy.group);if(index>=0)soldiers.splice(index,1);
+    const animIndex=soldierAnimations.findIndex(item=>item.group===enemy.group);if(animIndex>=0)soldierAnimations.splice(animIndex,1);
+    const pickIndex=pickables.indexOf(enemy.group);if(pickIndex>=0)pickables.splice(pickIndex,1);
+  }
+  enemyUnits.length=0;raidActive=false;renderStats();persistGame();
+}
 for(const saved of state.buildings){
   if(saved.kind==='farm')createFarm(saved.x,saved.z);
   if(saved.kind==='lumber')createLumber(saved.x,saved.z);
@@ -248,7 +280,7 @@ canvas.addEventListener('wheel',e=>{cameraRadius=THREE.MathUtils.clamp(cameraRad
 canvas.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 document.querySelectorAll('.build-option').forEach(button=>button.addEventListener('click',()=>{const type=button.dataset.build;if(selectedBuild===type){clearBuild();toast('İnşaat iptal edildi.');return;}clearBuild();selectedBuild=type;button.classList.add('active');grid.visible=true;$('selection-card').classList.add('hidden');$('bottom-hint').textContent=labels[type]+' için boş bir araziye dokun';toast(labels[type]+' seçildi. Yerleştirmek için araziye dokun.');}));
 $('train-soldier').addEventListener('click',()=>{const error=recruitCampaignSoldier(state);if(error){toast(error);return;}createSoldier(1+(Math.random()-.5)*3,9+(Math.random()-.5)*2);renderStats();persistGame();toast('Yeni bir kraliyet muhafızı göreve başladı.');});
-$('next-day').addEventListener('click',()=>{const message=advanceCampaignDay(state);renderStats();persistGame();toast('Gün '+state.day+': '+message);});
+$('next-day').addEventListener('click',()=>{const message=advanceCampaignDay(state);renderStats();persistGame();toast('Gün '+state.day+': '+message);if(state.day%5===0)spawnRaid();});
 $('zoom-in').addEventListener('click',()=>{cameraRadius=Math.max(18,cameraRadius-3);updateCamera();});
 $('zoom-out').addEventListener('click',()=>{cameraRadius=Math.min(48,cameraRadius+3);updateCamera();});
 $('reset-camera').addEventListener('click',()=>{cameraTarget.set(0,0,0);cameraAngle=Math.PI/4;cameraRadius=31;updateCamera();});
@@ -263,10 +295,20 @@ function animate(time){
   for(const item of treeAnimations){item.group.rotation.z=Math.sin(seconds*0.65+item.phase)*item.amount;}
   for(const item of soldierAnimations){
     const wave=seconds*0.7+item.phase;
-    item.group.position.x=item.baseX+Math.sin(wave)*0.18;
-    item.group.position.z=item.baseZ+Math.cos(wave)*0.12;
+    if(item.patrol){
+      item.group.position.x=item.baseX+Math.sin(wave)*.72;
+      item.group.position.z=item.baseZ+Math.cos(wave)*.42;
+      setSoldierClip(item,Math.abs(Math.cos(wave))>.35?'walk':'idle');
+    }
     item.mixer.update(0.032);
   }
+  for(const enemy of enemyUnits){
+    const dx=enemy.targetX-enemy.group.position.x,dz=enemy.targetZ-enemy.group.position.z;
+    const distance=Math.hypot(dx,dz);
+    if(distance>.65){enemy.group.position.x+=dx/distance*enemy.speed;enemy.group.position.z+=dz/distance*enemy.speed;enemy.group.rotation.y=Math.atan2(dx,dz);}
+  }
+  if(enemyUnits.length&&enemyUnits.every(enemy=>Math.hypot(enemy.targetX-enemy.group.position.x,enemy.targetZ-enemy.group.position.z)<=.65))finishRaid();
+  assetCatalog.update(0.032);
   for(const item of clothAnimations){
     const attr=item.mesh.geometry.attributes.position;
     for(let i=0;i<attr.count;i++){
