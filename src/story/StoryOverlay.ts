@@ -50,13 +50,16 @@ const chapters: StoryChapter[] = [
   continueLabel:'Krallığı yönetmeye devam et'
  }
 ];
-function readProgress(): StoryProgress {
+export function normalizeStoryProgress(raw: string | null): StoryProgress {
  try {
-  const raw=localStorage.getItem(STORAGE_KEY);
   if(!raw)return {chapter:0,choices:{}};
   const parsed=JSON.parse(raw) as Partial<StoryProgress>;
   return {chapter:Number.isInteger(parsed.chapter)?Math.max(0,Math.min(chapters.length-1,parsed.chapter as number)):0,choices:parsed.choices&&typeof parsed.choices==='object'?parsed.choices:{}};
  } catch { return {chapter:0,choices:{}}; }
+}
+function readProgress(): StoryProgress {
+ try { return normalizeStoryProgress(localStorage.getItem(STORAGE_KEY)); }
+ catch { return {chapter:0,choices:{}}; }
 }
 export class StoryOverlay {
  private progress=readProgress();
