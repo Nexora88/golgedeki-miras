@@ -4,7 +4,7 @@ import { StoryOverlay } from './story/StoryOverlay';
 import { AssetCatalog } from './assets/AssetCatalog';
 import { gameAssetManifest } from './assets/assetManifest';
 import { CampaignPanel } from './game/CampaignPanel';
-import { normalizeCampaign, advanceCampaignDay, placeCampaignBuilding, recruitCampaignSoldier, exploreRegion, resolveRegionalChallenge, improveDiplomacy, claimQuest, type RegionId } from './game/CampaignEngine';
+import { normalizeCampaign, advanceCampaignDay, placeCampaignBuilding, recruitCampaignSoldier, exploreRegion, resolveRegionalChallenge, improveDiplomacy, claimQuest } from './game/CampaignEngine';
 
 const canvas = document.querySelector('#world');
 const scene = new THREE.Scene();
@@ -151,14 +151,42 @@ function createMarket(x,z) {
 }
 function createSoldier(x,z) {
   const g=new THREE.Group();g.position.set(x,0,z);world.add(g);
-  const torso=cylinder(g,0,.65,0,.28,.32,1.2,mat(0x8b5944),7);
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.25,7,5),mat(0xc69b75));head.position.y=1.38;g.add(head);
-  cylinder(g,0,1.65,0,.31,.31,.22,materials.stoneDark,7);
-  box(g,.38,.78,0,.13,.8,.5,materials.stoneDark);
-  cylinder(g,-.35,.9,0,.035,.035,1.25,materials.gold,5);
-  g.userData.meta={name:'Kraliyet Milisi',description:'Kalenin ve halkın savunmasından sorumlu eğitimli bir asker.',meta:'Birlik · Seviye 1'};
-  pickables.push(g); soldiers.push(g);
-  soldierAnimations.push({group:g,torso,head,baseX:x,baseZ:z,phase:Math.random()*Math.PI*2});
+  const torsoPivot=new THREE.Group();torsoPivot.name='Torso';torsoPivot.position.set(0,.85,0);g.add(torsoPivot);
+  cylinder(torsoPivot,0,0,0,.28,.32,.82,mat(0x8b5944),7);
+  const headPivot=new THREE.Group();headPivot.name='Head';headPivot.position.set(0,.55,0);torsoPivot.add(headPivot);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.25,7,5),mat(0xc69b75));head.position.y=.13;headPivot.add(head);
+  cylinder(headPivot,0,.42,0,.31,.31,.2,materials.stoneDark,7);
+  const leftArm=new THREE.Group();leftArm.name='LeftArm';leftArm.position.set(-.32,.28,0);torsoPivot.add(leftArm);
+  const rightArm=new THREE.Group();rightArm.name='RightArm';rightArm.position.set(.32,.28,0);torsoPivot.add(rightArm);
+  cylinder(leftArm,0,-.28,0,.11,.13,.62,materials.stoneDark,6);
+  cylinder(rightArm,0,-.28,0,.11,.13,.62,materials.stoneDark,6);
+  const leftLeg=new THREE.Group();leftLeg.name='LeftLeg';leftLeg.position.set(-.14,-.42,0);g.add(leftLeg);
+  const rightLeg=new THREE.Group();rightLeg.name='RightLeg';rightLeg.position.set(.14,-.42,0);g.add(rightLeg);
+  cylinder(leftLeg,0,-.23,0,.12,.14,.48,materials.wood,6);
+  cylinder(rightLeg,0,-.23,0,.12,.14,.48,materials.wood,6);
+  cylinder(rightArm,0,-.55,.02,.035,.035,.9,materials.gold,5);
+  g.userData.meta={name:'Kraliyet Muhafızı',description:'Kalenin ve halkın güvenliğini sağlayan görevli.',meta:'Birlik · Seviye 1'};
+  const times=[0,.5,1,1.5,2];
+  const idle=new THREE.AnimationClip('Idle',2,[
+   new THREE.NumberKeyframeTrack('Torso.rotation[x]',times,[0,.015,0,-.015,0]),
+   new THREE.NumberKeyframeTrack('Head.rotation[y]',times,[0,.08,0,-.08,0]),
+   new THREE.NumberKeyframeTrack('LeftArm.rotation[z]',times,[0,.025,0,-.025,0]),
+   new THREE.NumberKeyframeTrack('RightArm.rotation[z]',times,[0,-.025,0,.025,0]),
+  ]);
+  const walk=new THREE.AnimationClip('Walk',1,[
+   new THREE.NumberKeyframeTrack('LeftLeg.rotation[x]',[0,.25,.5,.75,1],[.42,0,-.42,0,.42]),
+   new THREE.NumberKeyframeTrack('RightLeg.rotation[x]',[0,.25,.5,.75,1],[-.42,0,.42,0,-.42]),
+   new THREE.NumberKeyframeTrack('LeftArm.rotation[x]',[0,.25,.5,.75,1],[-.25,0,.25,0,-.25]),
+   new THREE.NumberKeyframeTrack('RightArm.rotation[x]',[0,.25,.5,.75,1],[.25,0,-.25,0,.25]),
+  ]);
+  const guard=new THREE.AnimationClip('Guard',2,[
+   new THREE.NumberKeyframeTrack('LeftArm.rotation[x]',[0,1,2],[-.18,-.12,-.18]),
+   new THREE.NumberKeyframeTrack('RightArm.rotation[x]',[0,1,2],[-.18,-.12,-.18]),
+   new THREE.NumberKeyframeTrack('Head.rotation[y]',[0,1,2],[-.2,.2,-.2]),
+  ]);
+  const mixer=new THREE.AnimationMixer(g);mixer.clipAction(idle).play();
+  pickables.push(g);soldiers.push(g);
+  soldierAnimations.push({group:g,mixer,clips:{idle,walk,guard},baseX:x,baseZ:z,phase:Math.random()*Math.PI*2});
   return g;
 }
 const soldiers=[];
@@ -237,8 +265,7 @@ function animate(time){
     const wave=seconds*0.7+item.phase;
     item.group.position.x=item.baseX+Math.sin(wave)*0.18;
     item.group.position.z=item.baseZ+Math.cos(wave)*0.12;
-    item.torso.scale.y=1+Math.sin(seconds*2.1+item.phase)*0.012;
-    item.head.rotation.y=Math.sin(seconds*0.8+item.phase)*0.13;
+    item.mixer.update(0.032);
   }
   for(const item of clothAnimations){
     const attr=item.mesh.geometry.attributes.position;
