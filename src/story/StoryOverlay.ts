@@ -90,6 +90,11 @@ export class StoryOverlay {
    if(first==='protect-people')paragraphs.push('Halkı önceleyen kararın, avluda toplanan ailelerin sana umutla bakmasını sağladı.');
    if(first==='seek-truth')paragraphs.push('Kuzey kapısının ardındaki gerçeği arama kararın, kâtibin haritasındaki işaretleri daha anlamlı kıldı.');
   }
+  if(chapter.id==='banner-oath'){
+   const oath=this.progress.choices['first-oath'];
+   if(oath==='repair-walls')paragraphs.push('Surların onarımı başladı. Nöbetçiler yeni hükümdarın kararlılığını konuşuyor.');
+   if(oath==='feed-people')paragraphs.push('Ambarlar açıldı ve erzak dağıtımı başladı. Halk, zor günlerde kendisini unutmadığını biliyor.');
+  }
   for(const value of paragraphs){const p=document.createElement('p');p.className='story-paragraph';p.textContent=value;this.panel.append(p);}
   for(const line of chapter.dialogue??[]){const quote=document.createElement('blockquote');const speaker=document.createElement('strong');speaker.textContent=line.speaker;const text=document.createElement('span');text.textContent='“'+line.line+'”';quote.append(speaker,text);this.panel.append(quote);}
   if(chapter.choices?.length){
