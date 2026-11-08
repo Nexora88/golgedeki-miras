@@ -23,7 +23,7 @@ export class AssetCatalog {
     private readonly target: THREE.Group,
     options: AssetCatalogOptions = {},
   ) {
-    this.baseUrl = (options.baseUrl ?? '/assets/generated').replace(/\/$/, '');
+    this.baseUrl = (options.baseUrl ?? 'assets/generated').replace(/\/$/, '');
   }
 
   async load(definition: GameAssetDefinition): Promise<THREE.Group | null> {
