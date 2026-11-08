@@ -221,16 +221,7 @@ function finishRaid(){
   }
   enemyUnits.length=0;raidActive=false;renderStats();persistGame();
 }
-for(const saved of state.buildings){
-  if(saved.kind==='farm')createFarm(saved.x,saved.z);
-  if(saved.kind==='lumber')createLumber(saved.x,saved.z);
-  if(saved.kind==='quarry')createQuarry(saved.x,saved.z);
-  if(saved.kind==='market')createMarket(saved.x,saved.z);
-  state.buildingCounts[saved.kind]++;
-}
-for(let i=0;i<4;i++)createSoldier(-2+i*1.3,7.2);
-for(let i=0;i<4;i++)createSoldier(3+i*1.1,-7.2);
-for(let i=0;i<Math.max(0,state.army-8);i++)createSoldier(-4+(i%5)*1.5,10+Math.floor(i/5)*1.4);
+
 
 // Decorative terrain: fixed low-poly props, deliberately limited for mobile performance.
 for(let i=0;i<30;i++){const x=(i%6)*3.1-22;const z=Math.floor(i/6)*4.2-12;if(Math.abs(x)>7||Math.abs(z)>9)tree(x,z,.72+(i%3)*.12);}
@@ -247,6 +238,16 @@ const activeSlot = Math.max(1,Math.min(3,Number(localStorage.getItem('gm.active-
 const state = normalizeCampaign(localStorage.getItem('gm.campaign.slot-'+activeSlot));
 state.buildingCounts = {farm:0,lumber:0,quarry:0,market:0};
 function persistGame(){ try { localStorage.setItem('gm.campaign.slot-'+activeSlot,JSON.stringify(state)); } catch { toast('Kayıt alanı kullanılamıyor.'); } }
+for(const saved of state.buildings){
+  if(saved.kind==='farm')createFarm(saved.x,saved.z);
+  if(saved.kind==='lumber')createLumber(saved.x,saved.z);
+  if(saved.kind==='quarry')createQuarry(saved.x,saved.z);
+  if(saved.kind==='market')createMarket(saved.x,saved.z);
+  state.buildingCounts[saved.kind]++;
+}
+for(let i=0;i<4;i++)createSoldier(-2+i*1.3,7.2);
+for(let i=0;i<4;i++)createSoldier(3+i*1.1,-7.2);
+for(let i=0;i<Math.max(0,state.army-8);i++)createSoldier(-4+(i%5)*1.5,10+Math.floor(i/5)*1.4);
 const costs={farm:{gold:40,wood:25},lumber:{gold:35,wood:20},quarry:{gold:45,wood:15},market:{gold:60,wood:30}};
 const labels={farm:'Çiftlik',lumber:'Oduncu Kampı',quarry:'Taş Ocağı',market:'Pazar Yeri'};
 const descriptions={farm:'Köylüler burada yiyecek üretir.',lumber:'Oduncular krallığa kereste sağlar.',quarry:'Taş ustaları yapı malzemesi çıkarır.',market:'Tüccarlar krallığa altın kazandırır.'};
