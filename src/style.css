@@ -37,3 +37,33 @@
 .story-book-button{position:absolute;right:18px;top:83px;pointer-events:auto;padding:8px 11px;border:1px solid var(--line);background:var(--panel);color:#d9c28f;font:700 9px Cinzel,serif;letter-spacing:1px;border-radius:3px}
 @media(max-width:760px){.story-book-button{top:68px;right:10px;padding:7px 9px;font-size:8px}.story-panel{padding:24px 20px}.story-paragraph{font-size:12px;line-height:1.7}.story-panel h2{font-size:28px}.story-footer{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.story-choice,.story-continue{transition:none}}
+
+
+/* Campaign management panel */
+.campaign-open{position:absolute;right:18px;top:88px;z-index:4;pointer-events:auto;padding:10px 13px;border:1px solid var(--gold);border-radius:3px;background:rgba(17,25,21,.94);color:#e6d4aa;font:700 9px Cinzel,serif;letter-spacing:1px;box-shadow:0 5px 18px #0005}
+.campaign-overlay{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:14px;background:rgba(4,8,6,.78);backdrop-filter:blur(8px)}
+.campaign-panel{width:min(940px,100%);max-height:90vh;overflow:auto;padding:clamp(16px,3vw,28px);background:linear-gradient(145deg,#202a23,#101714);border:1px solid #c9a45e77;box-shadow:0 25px 90px #000b;color:#eee8d8}
+.campaign-header{display:flex;justify-content:space-between;align-items:center;gap:15px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.campaign-heading small,.campaign-muted{font-size:8px;letter-spacing:1.5px;color:#c5a96d}
+.campaign-heading h2{font:700 clamp(24px,4vw,34px) Cinzel,serif;margin:7px 0 0;color:#f0e4c7}
+.campaign-stats{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;margin:15px 0 20px}
+.campaign-stat{padding:10px 8px;background:#ffffff08;border:1px solid #ffffff12;display:grid;gap:6px}
+.campaign-stat small{font-size:8px;letter-spacing:1px;color:#a99b7b}.campaign-stat b{font-size:15px;font-variant-numeric:tabular-nums}
+.campaign-columns{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.campaign-section{padding:14px;background:#090f0c66;border:1px solid #ffffff12;margin-bottom:13px}
+.campaign-section h3,.campaign-ending h3{font:700 12px Cinzel,serif;letter-spacing:1px;color:#d8bd83;margin:0 0 12px}
+.campaign-card{display:grid;gap:7px;padding:11px 0;border-top:1px solid #ffffff12}
+.campaign-card b,.campaign-diplomacy span{font-size:11px;color:#eee3ca}.campaign-card p{font-size:10px;line-height:1.55;color:#aaa99c;margin:0}
+.campaign-action{border:1px solid #b9955b88;background:#b9955b18;color:#f0dfba;padding:8px 10px;font-size:9px;font-weight:700;letter-spacing:.5px;text-align:center}
+.campaign-action:hover:not(:disabled){background:#b9955b38;border-color:#d6b56f}
+.campaign-action:disabled{opacity:.38;cursor:not-allowed}
+.campaign-action.secondary{background:transparent;border-color:#ffffff2a;color:#bcb5a4}
+.campaign-diplomacy{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;padding:10px 0;border-top:1px solid #ffffff12}
+.campaign-diplomacy .campaign-action{grid-column:1/-1}
+.campaign-ending{padding:17px;margin-bottom:13px;background:linear-gradient(120deg,#b9955b1c,#ffffff05);border:1px solid #c9a45e66}
+.campaign-ending small{font-size:8px;letter-spacing:2px;color:#d9bb7c}.campaign-ending p{font-size:11px;color:#c4bdac;line-height:1.6}
+.campaign-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.campaign-slot{display:grid;gap:7px;padding:10px;background:#ffffff08}.campaign-slot b{font-size:9px;color:#c8b58b;letter-spacing:1px}
+.campaign-footnote{font-size:9px;color:#8e9186;margin:10px 0 0}
+@media(max-width:760px){.campaign-open{top:69px;right:10px;padding:8px 9px;font-size:8px}.campaign-stats{grid-template-columns:repeat(4,minmax(0,1fr))}.campaign-columns{grid-template-columns:1fr;gap:0}.campaign-panel{max-height:94vh;padding:13px}.campaign-section{padding:11px}.campaign-card p{font-size:9px}.campaign-diplomacy{grid-template-columns:1fr auto}.campaign-slots{gap:5px}.campaign-slot{padding:7px}.campaign-slot .campaign-action{padding:7px 4px;font-size:8px}}
+@media(prefers-reduced-motion:reduce){.campaign-action{transition:none}}
