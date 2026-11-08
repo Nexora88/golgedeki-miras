@@ -164,7 +164,6 @@ function createSoldier(x,z) {
   const rightLeg=new THREE.Group();rightLeg.name='RightLeg';rightLeg.position.set(.14,-.42,0);g.add(rightLeg);
   cylinder(leftLeg,0,-.23,0,.12,.14,.48,materials.wood,6);
   cylinder(rightLeg,0,-.23,0,.12,.14,.48,materials.wood,6);
-  cylinder(rightArm,0,-.55,.02,.035,.035,.9,materials.gold,5);
   g.userData.meta={name:'Kraliyet Muhafızı',description:'Kalenin ve halkın güvenliğini sağlayan görevli.',meta:'Birlik · Seviye 1'};
   const times=[0,.5,1,1.5,2];
   const idle=new THREE.AnimationClip('Idle',2,[
