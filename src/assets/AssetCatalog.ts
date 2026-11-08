@@ -17,6 +17,8 @@ export interface AssetCatalogOptions {
 export class AssetCatalog {
   private readonly loader = new GLTFLoader();
   private readonly loaded = new Map<string, THREE.Group>();
+  private readonly mixers = new Map<string, THREE.AnimationMixer>();
+  private readonly clips = new Map<string, THREE.AnimationClip[]>();
   private readonly baseUrl: string;
 
   constructor(
@@ -39,6 +41,10 @@ export class AssetCatalog {
     const url = `${this.baseUrl}/${definition.file}`;
     const gltf = await this.loader.loadAsync(url);
     const model = gltf.scene;
+    if (gltf.animations.length) {
+      this.mixers.set(definition.id, new THREE.AnimationMixer(model));
+      this.clips.set(definition.id, gltf.animations);
+    }
 
     const transform = definition.transform;
     if (transform?.position) model.position.set(...transform.position);
@@ -66,6 +72,22 @@ export class AssetCatalog {
     return model;
   }
 
+  play(assetId: string, clipName: string, loop = true): boolean {
+    const mixer = this.mixers.get(assetId);
+    const clip = this.clips.get(assetId)?.find((candidate) => candidate.name === clipName);
+    if (!mixer || !clip) return false;
+    mixer.stopAllAction();
+    const action = mixer.clipAction(clip);
+    action.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, loop ? Infinity : 1);
+    action.clampWhenFinished = !loop;
+    action.play();
+    return true;
+  }
+
+  update(deltaSeconds: number): void {
+    for (const mixer of this.mixers.values()) mixer.update(deltaSeconds);
+  }
+
   unload(assetId: string): boolean {
     const model = this.loaded.get(assetId);
     if (!model) return false;
@@ -77,6 +99,9 @@ export class AssetCatalog {
       const materials = Array.isArray(object.material) ? object.material : [object.material];
       for (const material of materials) material.dispose();
     });
+    this.mixers.get(assetId)?.stopAllAction();
+    this.mixers.delete(assetId);
+    this.clips.delete(assetId);
     this.loaded.delete(assetId);
     return true;
   }
