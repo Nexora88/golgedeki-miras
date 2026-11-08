@@ -18,7 +18,10 @@ GitHub repository Settings → Pages should use **GitHub Actions** as the build 
 - Farms, lumber camps, quarries and markets
 - Militia training and day-based resource production
 - Story prologue with branching decisions and local story progress
-- Lightweight Three.js tree, soldier, banner and camera animations
+- Three.js environment animation, skeletal guard rigs and AnimationMixer idle/walk/guard clips
+- Region exploration, quest rewards, diplomacy, abstract regional encounters and three campaign endings
+- Three local save slots with autosave for resources, buildings, progress and campaign state
+- Periodic border events with simple enemy approach AI and automatic kingdom defense resolution
 
 ## Story direction
 
@@ -28,7 +31,7 @@ See docs/STORY_BIBLE.md for the current narrative bible and implemented/future s
 
 ## Three.js and art pipeline
 
-The live visual prototype is still bootstrapped from src/main.js. The TypeScript entrypoint (src/main.ts) imports that existing presentation and initializes the modular game domain. The current scene, camera, HUD and simulation are intentionally preserved while animation and art systems are added in small steps.
+The live visual prototype is still bootstrapped from src/main.js. The TypeScript entrypoint (src/main.ts) imports the single existing presentation runtime. It no longer creates a second invisible scene or duplicate input handlers. The existing scene, camera, HUD and controls remain the only rendered game runtime.
 
 See docs/THREE_ANIMATION_PIPELINE.md and docs/ART_PIPELINE.md. Leonardo-assisted GLB assets are added only after review; the asset catalog remains isolated until the authoritative rendered world group is explicitly wired.
 
@@ -68,11 +71,12 @@ npm run test:e2e
 - Advance day to collect production
 - Train militia to grow the army
 - Use the story button to reopen the current narrative chapter
+- Open Sefer Defteri to explore regions, complete quests, improve diplomacy and manage save slots
 
 ## Deployment
 
 - Vercel: Vite build publishes dist at the root path.
-- GitHub Pages: .github/workflows/deploy-pages.yml builds and deploys dist with the repository base path.
+- GitHub Pages: .github/workflows/deploy-pages.yml builds and deploys dist with relative asset paths. The deployment runs after changes reach main; repository Pages source must be set to GitHub Actions.
 - Run npm run build and npm test before considering a change verified.
 
 ## License
