@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import './style.css';
+import { StoryOverlay } from './story/StoryOverlay';
 
 const canvas = document.querySelector('#world');
 const scene = new THREE.Scene();
@@ -48,6 +49,10 @@ ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground)
 const world = new THREE.Group(); scene.add(world);
 const pickables = [];
 const buildings = [];
+const treeAnimations = [];
+const soldierAnimations = [];
+const clothAnimations = [];
+let cinematic = null;
 const boxGeo = new THREE.BoxGeometry(1,1,1);
 function box(parent, x,y,z, sx,sy,sz, material, selectable = false, meta = null) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz), material);
@@ -59,8 +64,16 @@ function cylinder(parent,x,y,z,rt,rb,h,material,segments=7) {
   const mesh = new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,segments),material);
   mesh.position.set(x,y,z); mesh.castShadow=true; mesh.receiveShadow=true; parent.add(mesh); return mesh;
 }
+function createClothBanner(parent,x,y,z,width,height,material) {
+  const geometry = new THREE.PlaneGeometry(width,height,8,5);
+  const mesh = new THREE.Mesh(geometry,material);
+  mesh.position.set(x,y,z); mesh.castShadow=true; parent.add(mesh);
+  clothAnimations.push({mesh,base:new Float32Array(geometry.attributes.position.array),phase:Math.random()*Math.PI*2,width});
+  return mesh;
+}
 function tree(x,z,scale=1) {
   const g = new THREE.Group(); g.position.set(x,0,z); g.scale.setScalar(scale); world.add(g);
+  treeAnimations.push({group:g,phase:Math.random()*Math.PI*2,amount:0.012+(scale%0.03)});
   cylinder(g,0,.65,0,.15,.21,1.3,materials.wood,5);
   const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(.85,0),materials.leaf); crown.position.y=1.55; crown.scale.set(1,1.25,1); crown.castShadow=true; g.add(crown);
   const crown2 = new THREE.Mesh(new THREE.IcosahedronGeometry(.57,0),materials.leaf2); crown2.position.set(.28,1.95,.12); crown2.castShadow=true; g.add(crown2);
@@ -70,7 +83,7 @@ function tower(x,z) {
   cylinder(g,0,1.65,0,1.0,1.12,3.3,materials.stone,8);
   cylinder(g,0,3.48,0,1.12,1.12,.28,materials.stoneDark,8);
   const roof=new THREE.Mesh(new THREE.ConeGeometry(1.12,1.45,8),materials.roof); roof.position.y=4.25; roof.castShadow=true; g.add(roof);
-  box(g,0,4.2,1.05,.12,.7,.08,materials.banner);
+  createClothBanner(g,0,4.25,1.05,0.9,0.65,materials.banner);
 }
 function wall(x,z,length,rot=0) {
   const m=box(world,x,1.35,z,length,2.7,.72,materials.stone,true,{name:'Kale Surları',description:'Krallığın savunma hattı. Düşman saldırılarına karşı ilk engel.',meta:'Savunma yapısı'});
@@ -87,7 +100,7 @@ function createCastle() {
   wall(0,-4.3,8.7,0); wall(0,4.3,8.7,0); wall(-4.8,0,8.5,Math.PI/2); wall(4.8,0,8.5,Math.PI/2);
   box(castle,0,1.1,4.65,2.5,2.2,.35,materials.wood,true,{name:'Ana Kapı',description:'Ağır meşe kapılar. Tehlike anında kapatılarak kaleyi korur.',meta:'Giriş · Açık'});
   const flagPole=cylinder(castle,0,5.7,-.2,.055,.055,3.1,materials.gold,6);
-  box(castle,.55,6.7,-.2,1.1,.75,.08,materials.banner);
+  createClothBanner(castle,.55,6.7,-.2,1.15,.8,materials.banner);
 }
 createCastle();
 
@@ -126,13 +139,15 @@ function createMarket(x,z) {
 }
 function createSoldier(x,z) {
   const g=new THREE.Group();g.position.set(x,0,z);world.add(g);
-  cylinder(g,0,.65,0,.28,.32,1.2,mat(0x8b5944),7);
+  const torso=cylinder(g,0,.65,0,.28,.32,1.2,mat(0x8b5944),7);
   const head=new THREE.Mesh(new THREE.SphereGeometry(.25,7,5),mat(0xc69b75));head.position.y=1.38;g.add(head);
   cylinder(g,0,1.65,0,.31,.31,.22,materials.stoneDark,7);
   box(g,.38,.78,0,.13,.8,.5,materials.stoneDark);
   cylinder(g,-.35,.9,0,.035,.035,1.25,materials.gold,5);
   g.userData.meta={name:'Kraliyet Milisi',description:'Kalenin ve halkın savunmasından sorumlu eğitimli bir asker.',meta:'Birlik · Seviye 1'};
-  pickables.push(g); soldiers.push(g); return g;
+  pickables.push(g); soldiers.push(g);
+  soldierAnimations.push({group:g,torso,head,baseX:x,baseZ:z,phase:Math.random()*Math.PI*2});
+  return g;
 }
 const soldiers=[];
 for(let i=0;i<4;i++)createSoldier(-2+i*1.3,7.2);
@@ -190,10 +205,50 @@ $('reset-camera').addEventListener('click',()=>{cameraTarget.set(0,0,0);cameraAn
 $('close-selection').addEventListener('click',()=>$('selection-card').classList.add('hidden'));
 window.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName))return;const step=e.shiftKey?2:1;if(e.key==='w'||e.key==='ArrowUp')cameraTarget.z-=step;if(e.key==='s'||e.key==='ArrowDown')cameraTarget.z+=step;if(e.key==='a'||e.key==='ArrowLeft')cameraTarget.x-=step;if(e.key==='d'||e.key==='ArrowRight')cameraTarget.x+=step;if(e.key==='+'||e.key==='=')cameraRadius=Math.max(18,cameraRadius-2);if(e.key==='-')cameraRadius=Math.min(48,cameraRadius+2);if(e.key==='Escape'){clearBuild();$('selection-card').classList.add('hidden');}$('bottom-hint').textContent='WASD / ok tuşları ile hareket · Sürükle ile kamerayı döndür';updateCamera();});
 let lastFrame=0;
-function animate(time){requestAnimationFrame(animate);if(time-lastFrame<32)return;lastFrame=time;renderer.render(scene,camera);}
+function animate(time){
+  requestAnimationFrame(animate);
+  if(time-lastFrame<32)return;
+  lastFrame=time;
+  const seconds=time*0.001;
+  for(const item of treeAnimations){item.group.rotation.z=Math.sin(seconds*0.65+item.phase)*item.amount;}
+  for(const item of soldierAnimations){
+    const wave=seconds*0.7+item.phase;
+    item.group.position.x=item.baseX+Math.sin(wave)*0.18;
+    item.group.position.z=item.baseZ+Math.cos(wave)*0.12;
+    item.torso.scale.y=1+Math.sin(seconds*2.1+item.phase)*0.012;
+    item.head.rotation.y=Math.sin(seconds*0.8+item.phase)*0.13;
+  }
+  for(const item of clothAnimations){
+    const attr=item.mesh.geometry.attributes.position;
+    for(let i=0;i<attr.count;i++){
+      const x=item.base[i*3], y=item.base[i*3+1];
+      const weight=(x+item.width/2)/item.width;
+      attr.setZ(i,item.base[i*3+2]+Math.sin(seconds*3+x*4+y*1.8+item.phase)*0.055*weight);
+    }
+    attr.needsUpdate=true;
+    item.mesh.geometry.computeVertexNormals();
+  }
+  if(cinematic){
+    const progress=Math.min(1,(time-cinematic.start)/cinematic.duration);
+    const push=Math.sin(progress*Math.PI);
+    cameraRadius=cinematic.baseRadius-5.5*push;
+    cameraAngle=cinematic.baseAngle+0.12*push;
+    cameraTarget.set(0,0,0);
+    updateCamera();
+    if(progress>=1)cinematic=null;
+  }
+  renderer.render(scene,camera);
+}
 requestAnimationFrame(animate);
 function resize(){renderer.setSize(window.innerWidth,window.innerHeight);renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));updateCamera();}
 window.addEventListener('resize',resize);
 renderStats();
-$('start-game').addEventListener('click',()=>{$('main-menu').classList.add('hidden');$('interface').classList.remove('hidden');toast('Krallığın hazır. İnşaata başlayabilirsin.');});
+const storyOverlay = new StoryOverlay();
+$('start-game').addEventListener('click',()=>{
+  $('main-menu').classList.add('hidden');
+  $('interface').classList.remove('hidden');
+  cinematic={start:performance.now(),duration:3200,baseRadius:cameraRadius,baseAngle:cameraAngle};
+  storyOverlay.openPrologue();
+  toast('Kuzey Kalesi’nde yeni bir dönem başlıyor.');
+});
 setTimeout(()=>{$('loading-screen').style.opacity='0';setTimeout(()=>$('loading-screen').remove(),550);$('main-menu').classList.remove('hidden');},1150);
